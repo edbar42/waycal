@@ -28,35 +28,40 @@ It is distribution-agnostic. The instructions below use `cargo`, which works on 
 
 ## Install
 
-You need the Rust toolchain (`rustup` or your distro's `rust` + `cargo` packages) and GTK4 + layer-shell development headers.
-
-### Arch / Omarchy
+### Arch / Omarchy (AUR)
 
 ```sh
-sudo pacman -S --needed rust gtk4 gtk4-layer-shell pkgconf
+yay -S waycal
 ```
 
-### Fedora
+Or with any other AUR helper (`paru -S waycal`), or manually via `git clone https://aur.archlinux.org/waycal.git && cd waycal && makepkg -si`.
+
+### Any distro with Rust installed
 
 ```sh
-sudo dnf install rust cargo gtk4-devel gtk4-layer-shell-devel pkgconf
+cargo install waycal
 ```
 
-### Debian / Ubuntu
+This pulls the latest release from [crates.io](https://crates.io/crates/waycal), builds it, and drops the binary into `~/.cargo/bin/waycal`. Make sure that directory is on your `$PATH`. You'll also need the GTK4 + `gtk4-layer-shell` development headers installed so cargo can link against them:
 
-```sh
-sudo apt install rustc cargo libgtk-4-dev libgtk4-layer-shell-dev pkg-config
-```
+| Distro             | Install command                                                                   |
+| ------------------ | --------------------------------------------------------------------------------- |
+| Arch / Omarchy     | `sudo pacman -S --needed gtk4 gtk4-layer-shell pkgconf`                           |
+| Fedora             | `sudo dnf install gtk4-devel gtk4-layer-shell-devel pkgconf`                      |
+| Debian / Ubuntu    | `sudo apt install libgtk-4-dev libgtk4-layer-shell-dev pkg-config`                |
 
-Then build and install the binary:
+### Prebuilt binary
+
+Each tagged release ships a prebuilt x86_64 Linux tarball on the [releases page](https://github.com/forrestknight/waycal/releases). Extract it and drop `waycal` anywhere on your `$PATH`.
+
+### Build from source
 
 ```sh
 git clone https://github.com/forrestknight/waycal.git
 cd waycal
-cargo install --path .
+cargo build --release
+install -Dm755 target/release/waycal ~/.local/bin/waycal
 ```
-
-`cargo install` drops the compiled binary into `~/.cargo/bin/waycal`. Make sure that directory is on your `$PATH`.
 
 ## Waybar integration
 
