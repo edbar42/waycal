@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "A tiny Waybar calendar popup for wlr-layer-shell compositors"
 license = "MIT"
-repository = "https://github.com/fkcodes/omacal"
+repository = "https://github.com/forrestknight/omacal"
 readme = "README.md"
 
 [dependencies]

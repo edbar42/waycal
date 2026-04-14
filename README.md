@@ -4,7 +4,7 @@ A tiny calendar popup for Waybar. Click an icon in the bar, a small month view d
 
 Written in Rust with GTK4 and `gtk4-layer-shell` so the popup anchors itself to the top of the screen via the Wayland layer-shell protocol — no compositor config needed.
 
-![omacal screenshot placeholder]()
+![omacal screenshot](screenshot.png)
 
 ## Features
 
@@ -51,7 +51,7 @@ sudo apt install rustc cargo libgtk-4-dev libgtk4-layer-shell-dev pkg-config
 Then build and install the binary:
 
 ```sh
-git clone https://github.com/fkcodes/omacal.git
+git clone https://github.com/forrestknight/omacal.git
 cd omacal
 cargo install --path .
 ```
