@@ -12,7 +12,7 @@
 <meta property="og:url" content="https://waycal.dev">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%231a2125'/%3E%3Crect x='20' y='28' width='60' height='50' rx='6' fill='none' stroke='%238FBC8F' stroke-width='6'/%3E%3Cline x1='20' y1='44' x2='80' y2='44' stroke='%238FBC8F' stroke-width='6'/%3E%3Cline x1='32' y1='22' x2='32' y2='34' stroke='%238FBC8F' stroke-width='6' stroke-linecap='round'/%3E%3Cline x1='68' y1='22' x2='68' y2='34' stroke='%238FBC8F' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a2125'/%3E%3Crect x='20' y='28' width='60' height='50' fill='none' stroke='%238FBC8F' stroke-width='6'/%3E%3Cline x1='20' y1='44' x2='80' y2='44' stroke='%238FBC8F' stroke-width='6'/%3E%3Cline x1='32' y1='22' x2='32' y2='34' stroke='%238FBC8F' stroke-width='6'/%3E%3Cline x1='68' y1='22' x2='68' y2='34' stroke='%238FBC8F' stroke-width='6'/%3E%3C/svg%3E">
 <style>
 :root {
   --bg: #14191d;
@@ -22,7 +22,8 @@
   --accent: #8FBC8F;
   --muted: #6a7a71;
   --border: rgba(143, 188, 143, 0.18);
-  --radius: 16px;
+  --border-strong: #8FBC8F;
+  --radius: 0;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
@@ -40,15 +41,94 @@ body {
     radial-gradient(ellipse 80% 60% at 50% 0%, rgba(143, 188, 143, 0.06), transparent),
     var(--bg);
 }
+/* ───────── Top nav ───────── */
+.topnav {
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1.5rem 1.5rem 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+.topnav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  transition: color 0.15s, border-color 0.15s;
+}
+.topnav a:hover, .topnav a:focus-visible {
+  color: var(--accent);
+  border-color: var(--border);
+  outline: none;
+}
+
+/* ───── Style toggle switch ───── */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.35rem 0.5rem;
+  font-family: inherit;
+  color: var(--muted);
+}
+.toggle kbd {
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 2px 5px;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  font-family: inherit;
+  background: transparent;
+  color: inherit;
+}
+.toggle .track {
+  position: relative;
+  width: 30px;
+  height: 14px;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  transition: border-radius 0.2s, border-color 0.15s;
+}
+.toggle .thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 10px;
+  height: 10px;
+  background: currentColor;
+  border-radius: 0;
+  transition: left 0.2s, border-radius 0.2s;
+}
+.toggle:hover, .toggle:focus-visible { color: var(--accent); outline: none; }
+body.rounded .toggle .track { border-radius: 999px; }
+body.rounded .toggle kbd { border-radius: 3px; }
+body.rounded .toggle .thumb {
+  left: 17px;
+  border-radius: 50%;
+}
+@media (max-width: 640px) {
+  .topnav { padding: 1rem 1rem 0; }
+}
+
 main {
   max-width: 760px;
   margin: 0 auto;
   width: 100%;
-  padding: 5rem 1.5rem 3rem;
+  padding: 3.5rem 1.5rem 3rem;
   flex: 1;
 }
 @media (max-width: 640px) {
-  main { padding: 3rem 1rem 2rem; }
+  main { padding: 2rem 1rem 2rem; }
 }
 
 /* ───────── Hero ───────── */
@@ -92,10 +172,11 @@ main {
   .hero .subtagline { margin-left: auto; margin-right: auto; }
 }
 
-/* ───────── Calendar (pixel-matched to src/main.rs) ───────── */
+/* ───────── Calendar (Omarchy-style: sharp corners + accent border) ───────── */
 .calendar {
-  background-color: rgba(26, 33, 37, 0.96);
-  border-radius: 16px;
+  background-color: #1a2125;
+  border: 2px solid var(--border-strong);
+  border-radius: 0;
   padding: 14px 18px;
   color: #c9d1d9;
   font-family: "CaskaydiaMono Nerd Font", "Cascadia Code", "JetBrains Mono", "Fira Code", monospace;
@@ -105,9 +186,7 @@ main {
   flex-direction: column;
   gap: 6px;
   outline: none;
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(143, 188, 143, 0.05);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
   transition: box-shadow 0.2s;
 }
 .calendar:focus-visible {
@@ -142,7 +221,7 @@ main {
 .cal-day.today {
   background-color: #8FBC8F;
   color: #1a2125;
-  border-radius: 8px;
+  border-radius: 0;
   font-weight: bold;
 }
 .cal-footer {
@@ -171,7 +250,7 @@ h2 {
 /* ───────── About ───────── */
 .about {
   background: var(--surface);
-  border-radius: var(--radius);
+  border-left: 2px solid var(--border-strong);
   padding: 1.5rem 1.75rem;
   line-height: 1.7;
   color: var(--text);
@@ -181,10 +260,10 @@ h2 {
 .about .accent { color: var(--accent); }
 
 /* ───────── Install commands ───────── */
-.commands { display: flex; flex-direction: column; gap: 0.6rem; }
+.commands { display: flex; flex-direction: column; gap: 0.5rem; }
 .cmd {
   background: var(--surface);
-  border-radius: var(--radius);
+  border-radius: 0;
   padding: 0.95rem 1.25rem;
   cursor: pointer;
   border: 1px solid transparent;
@@ -195,7 +274,7 @@ h2 {
   user-select: none;
 }
 .cmd:hover, .cmd:focus-visible {
-  border-color: var(--border);
+  border-color: var(--border-strong);
   background: var(--surface-soft);
   outline: none;
 }
@@ -234,7 +313,7 @@ dl.keys {
   gap: 0.7rem 2rem;
   background: var(--surface);
   padding: 1.25rem 1.75rem;
-  border-radius: var(--radius);
+  border-radius: 0;
 }
 dl.keys dt { color: var(--accent); font-weight: 700; font-size: 0.9rem; }
 dl.keys dd { color: var(--muted); font-size: 0.85rem; }
@@ -250,7 +329,7 @@ dl.keys dd { color: var(--muted); font-size: 0.85rem; }
   color: var(--text);
   text-decoration: none;
   padding: 0.7rem 1.25rem;
-  border-radius: var(--radius);
+  border-radius: 0;
   background: var(--surface);
   font-size: 0.85rem;
   border: 1px solid transparent;
@@ -258,7 +337,7 @@ dl.keys dd { color: var(--muted); font-size: 0.85rem; }
 }
 .links a:hover, .links a:focus-visible {
   color: var(--accent);
-  border-color: var(--border);
+  border-color: var(--border-strong);
   background: var(--surface-soft);
   outline: none;
 }
@@ -273,9 +352,41 @@ footer {
 footer a { color: var(--muted); text-decoration: underline dotted; }
 footer a:hover { color: var(--accent); }
 ::selection { background: var(--accent); color: var(--surface); }
+
+/* ───────── Rounded mode (toggled by the style button / 's' key) ───────── */
+body.rounded .calendar {
+  background-color: rgba(26, 33, 37, 0.96);
+  border-color: transparent;
+  border-radius: 16px;
+}
+body.rounded .cal-day.today { border-radius: 8px; }
+body.rounded .about {
+  border-left-color: transparent;
+  border-radius: 16px;
+}
+body.rounded .cmd { border-radius: 16px; }
+body.rounded dl.keys { border-radius: 16px; }
+body.rounded .links a { border-radius: 16px; }
+body.rounded .topnav a { border-radius: 8px; }
+
+.calendar,
+.about,
+.cmd,
+dl.keys,
+.links a,
+.topnav a {
+  transition: border-radius 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
 </style>
 </head>
 <body>
+<nav class="topnav">
+  <button type="button" class="toggle" id="style-toggle" aria-label="Toggle sharp / rounded style" title="Toggle style (press s)">
+    <kbd>s</kbd>
+    <span class="track"><span class="thumb"></span></span>
+  </button>
+  <a href="https://github.com/forrestknight/waycal" target="_blank" rel="noopener noreferrer">GitHub &#8599;</a>
+</nav>
 <main>
 
   <section class="hero">
@@ -325,6 +436,7 @@ footer a:hover { color: var(--accent); }
       <dt>← →</dt><dd>previous / next month</dd>
       <dt>↑ ↓</dt><dd>previous / next year</dd>
       <dt>⏎</dt><dd>jump back to today</dd>
+      <dt>s</dt><dd>toggle sharp / rounded style (remembered)</dd>
       <dt>⎋</dt><dd>close</dd>
     </dl>
   </section>
@@ -345,6 +457,40 @@ footer a:hover { color: var(--accent); }
 </footer>
 
 <script>
+/* ───────── Style toggle (sharp ↔ rounded), persisted via localStorage ───────── */
+(function () {
+  var KEY = "waycal-style";
+  var btn = document.getElementById("style-toggle");
+  function apply(mode) {
+    if (mode === "rounded") {
+      document.body.classList.add("rounded");
+    } else {
+      document.body.classList.remove("rounded");
+    }
+  }
+  function current() {
+    return document.body.classList.contains("rounded") ? "rounded" : "sharp";
+  }
+  function toggle() {
+    var next = current() === "rounded" ? "sharp" : "rounded";
+    apply(next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+  }
+  try {
+    var saved = localStorage.getItem(KEY);
+    if (saved === "rounded") apply("rounded");
+  } catch (e) {}
+  if (btn) btn.addEventListener("click", toggle);
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "s" && e.key !== "S") return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+    e.preventDefault();
+    toggle();
+  });
+})();
+
 /* ───────── Interactive calendar (mirrors src/main.rs) ───────── */
 (function () {
   var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -403,7 +549,7 @@ footer a:hover { color: var(--accent); }
       h += '<div class="cal-day dim">' + i + '</div>';
     }
     h += '</div>';
-    h += '<div class="cal-footer">\u2190\u2192 month   \u2191\u2193 year   \u23CE today</div>';
+    h += '<div class="cal-footer">\u2190\u2192 mo   \u2191\u2193 yr   \u23CE today   s style</div>';
     el.innerHTML = h;
   }
 

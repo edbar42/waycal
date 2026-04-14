@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use chrono::{Datelike, Local, NaiveDate};
@@ -14,13 +15,19 @@ window.waycal {
     background: transparent;
 }
 .waycal-root {
-    background-color: rgba(26, 33, 37, 0.96);
-    border-radius: 16px;
+    background-color: #1a2125;
+    border: 2px solid #8FBC8F;
+    border-radius: 0;
     padding: 14px 18px;
     color: #c9d1d9;
     font-family: "CaskaydiaMono Nerd Font", monospace;
     font-size: 13px;
     min-width: 260px;
+}
+.waycal-root.rounded {
+    background-color: rgba(26, 33, 37, 0.96);
+    border: 2px solid transparent;
+    border-radius: 16px;
 }
 .waycal-header {
     font-weight: bold;
@@ -42,8 +49,11 @@ window.waycal {
 .waycal-day.today {
     background-color: #8FBC8F;
     color: #1a2125;
-    border-radius: 8px;
+    border-radius: 0;
     font-weight: bold;
+}
+.waycal-root.rounded .waycal-day.today {
+    border-radius: 8px;
 }
 .waycal-footer {
     color: #6a7a71;
@@ -83,6 +93,29 @@ fn days_in_month(y: i32, m: u32) -> u32 {
     let first = NaiveDate::from_ymd_opt(y, m, 1).unwrap();
     let next = NaiveDate::from_ymd_opt(ny, nm, 1).unwrap();
     next.signed_duration_since(first).num_days() as u32
+}
+
+fn style_state_path() -> Option<PathBuf> {
+    let base = std::env::var_os("XDG_STATE_HOME")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/state")))?;
+    Some(base.join("waycal").join("style"))
+}
+
+fn load_rounded() -> bool {
+    style_state_path()
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .map(|s| s.trim() == "rounded")
+        .unwrap_or(false)
+}
+
+fn save_rounded(rounded: bool) {
+    if let Some(path) = style_state_path() {
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let _ = std::fs::write(path, if rounded { "rounded" } else { "sharp" });
+    }
 }
 
 fn month_name(m: u32) -> &'static str {
@@ -132,7 +165,7 @@ fn build_ui(app: &gtk4::Application) {
     window.set_layer(Layer::Top);
     window.set_keyboard_mode(KeyboardMode::OnDemand);
     window.set_anchor(Edge::Top, true);
-    window.set_margin(Edge::Top, 4);
+    window.set_margin(Edge::Top, 0);
 
     let header = gtk4::Label::new(None);
     header.add_css_class("waycal-header");
@@ -143,12 +176,15 @@ fn build_ui(app: &gtk4::Application) {
     grid.set_column_spacing(2);
     grid.set_halign(gtk4::Align::Center);
 
-    let footer = gtk4::Label::new(Some("\u{2190}\u{2192} month   \u{2191}\u{2193} year   \u{23CE} today"));
+    let footer = gtk4::Label::new(Some("\u{2190}\u{2192} mo   \u{2191}\u{2193} yr   \u{23CE} today   s style"));
     footer.add_css_class("waycal-footer");
     footer.set_halign(gtk4::Align::Center);
 
     let root = gtk4::Box::new(gtk4::Orientation::Vertical, 6);
     root.add_css_class("waycal-root");
+    if load_rounded() {
+        root.add_css_class("rounded");
+    }
     root.append(&header);
     root.append(&grid);
     root.append(&footer);
@@ -163,6 +199,7 @@ fn build_ui(app: &gtk4::Application) {
         let grid = grid.clone();
         let header = header.clone();
         let window = window.clone();
+        let root = root.clone();
         key.connect_key_pressed(move |_, keyval, _, _| {
             let current = *state.borrow();
             let next = match keyval {
@@ -173,6 +210,16 @@ fn build_ui(app: &gtk4::Application) {
                 gdk::Key::Return | gdk::Key::KP_Enter => ViewDate::today(),
                 gdk::Key::Escape => {
                     window.close();
+                    return glib::Propagation::Stop;
+                }
+                gdk::Key::s | gdk::Key::S => {
+                    let now_rounded = !root.has_css_class("rounded");
+                    if now_rounded {
+                        root.add_css_class("rounded");
+                    } else {
+                        root.remove_css_class("rounded");
+                    }
+                    save_rounded(now_rounded);
                     return glib::Propagation::Stop;
                 }
                 _ => return glib::Propagation::Proceed,
