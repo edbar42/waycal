@@ -242,7 +242,7 @@ fn build_ui(app: &gtk4::Application) {
     let km = &config.keymaps;
 
     let footer_text = format!(
-        "{}{} mo   {}{} yr   {} today   {} style",
+        "{}/{} mo   {}/{} yr   {} today   {} style",
         km.month_prev, km.month_next, km.year_prev, km.year_next,
         km.today, km.style_toggle
     );
