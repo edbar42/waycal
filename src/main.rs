@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
 
+use chrono::format::Locale;
 use chrono::{Datelike, Local, NaiveDate};
 use gtk4::gdk;
 use gtk4::glib;
@@ -16,17 +17,17 @@ window.waycal {
     background: transparent;
 }
 .waycal-root {
-    background-color: #1a2125;
-    border: 2px solid #8FBC8F;
+    background-color: #282c34;
+    border: 2px solid #c678dd;
     border-radius: 0;
     padding: 14px 18px;
-    color: #c9d1d9;
+    color: #abb2bf;
     font-family: "CaskaydiaMono Nerd Font", monospace;
     font-size: 13px;
     min-width: 260px;
 }
 .waycal-root.rounded {
-    background-color: rgba(26, 33, 37, 0.96);
+    background-color: rgba(40, 44, 52, 0.96);
     border: 2px solid transparent;
     border-radius: 16px;
 }
@@ -34,9 +35,10 @@ window.waycal {
     font-weight: bold;
     font-size: 15px;
     padding-bottom: 6px;
+    color: #c678dd;
 }
 .waycal-weekday {
-    color: #8FBC8F;
+    color: #c678dd;
     font-weight: bold;
     padding: 2px 6px;
 }
@@ -48,8 +50,8 @@ window.waycal {
     opacity: 0.3;
 }
 .waycal-day.today {
-    background-color: #8FBC8F;
-    color: #1a2125;
+    background-color: #c678dd;
+    color: #282c34;
     border-radius: 0;
     font-weight: bold;
 }
@@ -57,11 +59,11 @@ window.waycal {
     border-radius: 8px;
 }
 .waycal-footer {
-    color: #6a7a71;
+    color: #5c6370;
     font-size: 10px;
     padding-top: 8px;
     margin-top: 6px;
-    border-top: 1px solid rgba(143, 188, 143, 0.18);
+    border-top: 1px solid rgba(198, 120, 221, 0.18);
 }
 "#;
 
@@ -163,6 +165,8 @@ impl Default for Keymaps {
 struct Config {
     #[serde(default)]
     keymaps: Keymaps,
+    #[serde(default)]
+    locale: Option<String>,
 }
 
 fn config_path() -> Option<PathBuf> {
@@ -180,21 +184,24 @@ fn parse_key(name: &str) -> Option<gdk::Key> {
     gdk::Key::from_name(name)
 }
 
-fn month_name(m: u32) -> &'static str {
-    match m {
-        1 => "January",
-        2 => "February",
-        3 => "March",
-        4 => "April",
-        5 => "May",
-        6 => "June",
-        7 => "July",
-        8 => "August",
-        9 => "September",
-        10 => "October",
-        11 => "November",
-        12 => "December",
-        _ => "",
+fn resolve_locale(cfg: Option<&str>) -> Locale {
+    let raw = cfg
+        .map(String::from)
+        .or_else(|| std::env::var("LC_TIME").ok())
+        .or_else(|| std::env::var("LANG").ok());
+    let Some(raw) = raw else { return Locale::POSIX };
+    let trimmed = raw.split('.').next().unwrap_or(&raw).trim();
+    if trimmed.is_empty() || trimmed == "C" || trimmed == "POSIX" {
+        return Locale::POSIX;
+    }
+    Locale::try_from(trimmed).unwrap_or(Locale::POSIX)
+}
+
+fn capitalize(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        Some(f) => f.to_uppercase().chain(c).collect(),
+        None => String::new(),
     }
 }
 
@@ -240,6 +247,7 @@ fn build_ui(app: &gtk4::Application) {
 
     let config = load_config();
     let km = &config.keymaps;
+    let locale = resolve_locale(config.locale.as_deref());
 
     let footer_text = format!(
         "{}/{} mo   {}/{} yr   {} today   {} style",
@@ -268,7 +276,7 @@ fn build_ui(app: &gtk4::Application) {
     let key_close = parse_key(&km.close);
 
     let state = Rc::new(RefCell::new(ViewDate::today()));
-    render(&grid, &header, *state.borrow());
+    render(&grid, &header, *state.borrow(), locale);
 
     let key = gtk4::EventControllerKey::new();
     {
@@ -302,7 +310,7 @@ fn build_ui(app: &gtk4::Application) {
                 _ => return glib::Propagation::Proceed,
             };
             *state.borrow_mut() = next;
-            render(&grid, &header, next);
+            render(&grid, &header, next, locale);
             glib::Propagation::Stop
         });
     }
@@ -311,21 +319,25 @@ fn build_ui(app: &gtk4::Application) {
     window.present();
 }
 
-fn render(grid: &gtk4::Grid, header: &gtk4::Label, v: ViewDate) {
-    header.set_text(&format!("{} {}", month_name(v.month), v.year));
+fn render(grid: &gtk4::Grid, header: &gtk4::Label, v: ViewDate, loc: Locale) {
+    let first = NaiveDate::from_ymd_opt(v.year, v.month, 1).unwrap();
+    let month_label = capitalize(&first.format_localized("%B", loc).to_string());
+    header.set_text(&format!("{} {}", month_label, v.year));
 
     while let Some(child) = grid.first_child() {
         grid.remove(&child);
     }
 
-    let weekdays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-    for (i, name) in weekdays.iter().enumerate() {
-        let lbl = gtk4::Label::new(Some(name));
+    let week_ref = NaiveDate::from_isoywd_opt(2024, 1, chrono::Weekday::Mon).unwrap();
+    for i in 0..7 {
+        let d = week_ref + chrono::Duration::days(i);
+        let full = d.format_localized("%a", loc).to_string();
+        let short: String = capitalize(&full).chars().take(2).collect();
+        let lbl = gtk4::Label::new(Some(&short));
         lbl.add_css_class("waycal-weekday");
         grid.attach(&lbl, i as i32, 0, 1, 1);
     }
 
-    let first = NaiveDate::from_ymd_opt(v.year, v.month, 1).unwrap();
     let lead = first.weekday().num_days_from_monday() as i32;
     let days = days_in_month(v.year, v.month) as i32;
 

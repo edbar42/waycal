@@ -123,6 +123,7 @@ waycal looks for a YAML config file at `$XDG_CONFIG_HOME/waycal/config.yaml` (us
 If the file is missing or a field is omitted, defaults are used. Below is a config file with all the default values:
 
 ```yaml
+locale: null # omit or null → auto-detect from $LC_TIME / $LANG; set e.g. `pt_BR`, `fr_FR`, `de_DE` to override
 keymaps:
   month_prev: Left
   month_next: Right
@@ -133,7 +134,7 @@ keymaps:
   close: Escape
 ```
 
-Key names follow [GDK key names](https://docs.gtk.org/gdk4/keys.html).
+Key names follow [GDK key names](https://docs.gtk.org/gdk4/keys.html). Locale values follow POSIX `language_TERRITORY` form (encoding suffix like `.UTF-8` is stripped); must be installed on your system.
 
 ## Why not just use the Waybar clock tooltip?
 
