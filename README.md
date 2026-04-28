@@ -124,6 +124,7 @@ If the file is missing or a field is omitted, defaults are used. Below is a conf
 
 ```yaml
 locale: null # omit or null → auto-detect from $LC_TIME / $LANG; set e.g. `pt_BR`, `fr_FR`, `de_DE` to override
+first_day_of_week: mon # first column of the calendar; accepts: mon tue wed thu fri sat sun (default: mon)
 keymaps:
   month_prev: Left
   month_next: Right

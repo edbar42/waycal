@@ -146,6 +146,19 @@ fn default_year_next() -> String { "Down".into() }
 fn default_today() -> String { "Return".into() }
 fn default_style_toggle() -> String { "s".into() }
 fn default_close() -> String { "Escape".into() }
+fn default_first_day_of_week() -> String { "Monday".into() }
+
+fn parse_first_day(s: &str) -> u32 {
+    match s.to_lowercase().as_str() {
+        "tue" => 1,
+        "wed" => 2,
+        "thu" => 3,
+        "fri" => 4,
+        "sat" => 5,
+        "sun" => 6,
+        _ => 0,
+    }
+}
 
 impl Default for Keymaps {
     fn default() -> Self {
@@ -167,6 +180,8 @@ struct Config {
     keymaps: Keymaps,
     #[serde(default)]
     locale: Option<String>,
+    #[serde(default = "default_first_day_of_week")]
+    first_day_of_week: String,
 }
 
 fn config_path() -> Option<PathBuf> {
@@ -248,6 +263,7 @@ fn build_ui(app: &gtk4::Application) {
     let config = load_config();
     let km = &config.keymaps;
     let locale = resolve_locale(config.locale.as_deref());
+    let first_day = parse_first_day(&config.first_day_of_week);
 
     let footer_text = format!(
         "{}/{} mo   {}/{} yr   {} today   {} style",
@@ -276,7 +292,7 @@ fn build_ui(app: &gtk4::Application) {
     let key_close = parse_key(&km.close);
 
     let state = Rc::new(RefCell::new(ViewDate::today()));
-    render(&grid, &header, *state.borrow(), locale);
+    render(&grid, &header, *state.borrow(), locale, first_day);
 
     let key = gtk4::EventControllerKey::new();
     {
@@ -310,7 +326,7 @@ fn build_ui(app: &gtk4::Application) {
                 _ => return glib::Propagation::Proceed,
             };
             *state.borrow_mut() = next;
-            render(&grid, &header, next, locale);
+            render(&grid, &header, next, locale, first_day);
             glib::Propagation::Stop
         });
     }
@@ -319,7 +335,7 @@ fn build_ui(app: &gtk4::Application) {
     window.present();
 }
 
-fn render(grid: &gtk4::Grid, header: &gtk4::Label, v: ViewDate, loc: Locale) {
+fn render(grid: &gtk4::Grid, header: &gtk4::Label, v: ViewDate, loc: Locale, first_day: u32) {
     let first = NaiveDate::from_ymd_opt(v.year, v.month, 1).unwrap();
     let month_label = capitalize(&first.format_localized("%B", loc).to_string());
     header.set_text(&format!("{} {}", month_label, v.year));
@@ -328,7 +344,8 @@ fn render(grid: &gtk4::Grid, header: &gtk4::Label, v: ViewDate, loc: Locale) {
         grid.remove(&child);
     }
 
-    let week_ref = NaiveDate::from_isoywd_opt(2024, 1, chrono::Weekday::Mon).unwrap();
+    let week_ref = NaiveDate::from_isoywd_opt(2024, 1, chrono::Weekday::Mon).unwrap()
+        + chrono::Duration::days(first_day as i64);
     for i in 0..7 {
         let d = week_ref + chrono::Duration::days(i);
         let full = d.format_localized("%a", loc).to_string();
@@ -338,7 +355,7 @@ fn render(grid: &gtk4::Grid, header: &gtk4::Label, v: ViewDate, loc: Locale) {
         grid.attach(&lbl, i as i32, 0, 1, 1);
     }
 
-    let lead = first.weekday().num_days_from_monday() as i32;
+    let lead = (first.weekday().num_days_from_monday() as i32 + 7 - first_day as i32) % 7;
     let days = days_in_month(v.year, v.month) as i32;
 
     let today = Local::now().date_naive();
